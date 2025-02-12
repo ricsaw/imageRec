@@ -90,10 +90,12 @@ imageRec/
 
 ```txt
 flask==2.0.1
-opencv-python-headless==4.5.3.56
-deepface==0.0.75
-numpy==1.21.0
+Werkzeug==2.0.1
+numpy>=1.19.5
+opencv-python-headless>=4.5.3.56
 tensorflow-cpu>=2.5.0
+deepface>=0.0.75
+tf-keras==2.18.0
 ```
 
 ## Usage
