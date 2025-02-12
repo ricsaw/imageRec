@@ -1,10 +1,8 @@
+# requirements.txt
 flask==2.0.1
-selenium==4.1.0
-opencv-python==4.5.3.56
-numpy==1.21.0
-Pillow==8.3.1
-beautifulsoup4==4.9.3
-requests==2.26.0
-werkzeug==2.0.1
-torch==1.9.0
-torchvision==0.10.0
+Werkzeug==2.0.1
+gunicorn==20.1.0
+numpy>=1.19.5
+opencv-python-headless>=4.5.3.56
+tensorflow-cpu>=2.5.0
+deepface>=0.0.75
