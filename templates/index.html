@@ -1,58 +1,203 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Recognition App</title>
+    <title>Face and Object Recognition</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .prediction-box {
+        .detection-box {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 15px;
             margin: 10px 0;
             border-radius: 5px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .progress {
-            height: 20px;
-        }
-        #preview-image {
-            max-width: 100%;
-            max-height: 400px;
+
+        .result-section {
             margin: 20px 0;
         }
+
+        #result-image {
+            max-width: 100%;
+            max-height: 600px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
         .loading {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.8);
+            z-index: 1000;
+        }
+
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .confidence-bar {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .confidence-level {
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.6s ease;
+        }
+
+        .match-item {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+        }
+
+        .match-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #343a40;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .btn-analyze {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 25px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-analyze:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .analysis-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .analysis-item i {
+            color: #007bff;
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Image Recognition App</h1>
+        <h1 class="text-center mb-4">Face and Object Recognition</h1>
         
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
                         <form id="upload-form" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label for="image-upload" class="form-label">Choose an image</label>
-                                <input type="file" class="form-control" id="image-upload" accept="image/*" required>
+                            <div class="upload-area" id="drop-area">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <h4>Drag and drop an image or click to upload</h4>
+                                <p class="text-muted">Supported formats: JPG, PNG, JPEG, WEBP</p>
+                                <input type="file" class="form-control d-none" id="image-upload" accept="image/*" required>
                             </div>
-                            <button type="submit" class="btn btn-primary">Analyze Image</button>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-analyze">
+                                    <i class="fas fa-search me-2"></i>Analyze Image
+                                </button>
+                            </div>
                         </form>
 
-                        <div class="loading mt-3">
-                            <div class="d-flex justify-content-center">
-                                <div class="spinner-border" role="status">
+                        <div class="loading">
+                            <div class="loading-content">
+                                <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
+                                <h5 class="mt-3">Analyzing image...</h5>
+                                <p class="text-muted">This may take a few moments</p>
                             </div>
                         </div>
 
                         <div id="results" class="mt-4">
-                            <img id="preview-image" class="d-none">
-                            <div id="predictions"></div>
+                            <div class="result-card">
+                                <img id="result-image" class="d-none">
+                                
+                                <div id="faces" class="result-section">
+                                    <h3 class="section-title">
+                                        <i class="fas fa-user me-2"></i>Face Analysis Results
+                                    </h3>
+                                    <div id="faces-content"></div>
+                                </div>
+
+                                <div id="objects" class="result-section">
+                                    <h3 class="section-title">
+                                        <i class="fas fa-box me-2"></i>Object Detection Results
+                                    </h3>
+                                    <div id="objects-content"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -61,15 +206,56 @@
     </div>
 
     <script>
+        // Drag and drop functionality
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('image-upload');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.classList.add('bg-light');
+        }
+
+        function unhighlight(e) {
+            dropArea.classList.remove('bg-light');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+        }
+
+        // Click to upload
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Form submission
         document.getElementById('upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const fileInput = document.getElementById('image-upload');
             const file = fileInput.files[0];
             if (!file) return;
 
-            // Show loading spinner
-            document.querySelector('.loading').style.display = 'block';
+            document.querySelector('.loading').style.display = 'flex';
             
             const formData = new FormData();
             formData.append('file', file);
@@ -87,24 +273,53 @@
                     return;
                 }
 
-                // Display image and predictions
-                const previewImage = document.getElementById('preview-image');
-                previewImage.src = `/static/${data.image_path}`;
-                previewImage.classList.remove('d-none');
+                // Display detected image
+                const resultImage = document.getElementById('result-image');
+                resultImage.src = `/static/${data.image_path}`;
+                resultImage.classList.remove('d-none');
 
-                const predictionsDiv = document.getElementById('predictions');
-                predictionsDiv.innerHTML = data.predictions.map(pred => `
-                    <div class="prediction-box">
-                        <h5>${pred.description}</h5>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" 
-                                 style="width: ${pred.probability}%" 
-                                 aria-valuenow="${pred.probability}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                ${pred.probability.toFixed(2)}%
+                // Display face analysis results
+                const facesContent = document.getElementById('faces-content');
+                facesContent.innerHTML = data.faces.map((face, index) => `
+                    <div class="detection-box">
+                        <h5>Face ${index + 1}</h5>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <i class="fas fa-birthday-cake"></i>
+                                Age: ${face.analysis.age}
+                            </div>
+                            <div class="analysis-item">
+                                <i class="fas fa-venus-mars"></i>
+                                Gender: ${face.analysis.gender}
+                            </div>
+                            <div class="analysis-item">
+                                <i class="fas fa-smile"></i>
+                                Emotion: ${face.analysis.dominant_emotion}
+                            </div>
+                            <div class="analysis-item">
+                                <i class="fas fa-globe"></i>
+                                Race: ${face.analysis.dominant_race}
                             </div>
                         </div>
+                    </div>
+                `).join('');
+
+                // Display object detections
+                const objectsContent = document.getElementById('objects-content');
+                objectsContent.innerHTML = data.detections.map(det => `
+                    <div class="detection-box">
+                        <h5>
+                            <i class="fas fa-box me-2"></i>
+                            ${det.class}
+                        </h5>
+                        <div class="confidence-bar">
+                            <div class="confidence-level" 
+                                 style="width: ${det.confidence * 100}%">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            Confidence: ${(det.confidence * 100).toFixed(1)}%
+                        </small>
                     </div>
                 `).join('');
 
@@ -112,7 +327,6 @@
                 alert('Error analyzing image');
                 console.error(error);
             } finally {
-                // Hide loading spinner
                 document.querySelector('.loading').style.display = 'none';
             }
         });
