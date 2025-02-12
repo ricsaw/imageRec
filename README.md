@@ -71,8 +71,19 @@ imageRec/
 │   └── uploads/           # Temporary image storage
 ├── templates/
 │   └── index.html         # Main web interface
-├── app.py                 # Main application file
-└── requirements.txt       # Python dependencies
+├── models/               # Pre-trained models (YOLOv3, DeepFace)
+|   └── face_analyzer.py  # Face analysis model wrapper
+|   └── object_detector.py# Object detection model wrapper
+├── services/           # Business logic and processing functions
+│   └── detection_service.py # Object detection service
+├── utils/               # Helper functions and utilities
+|   └── image_processor.py # Image processing utilities
+├── main.py              # Flask application entry point
+├── app.py               # Flask application configuration and routes
+├── requirements.txt     # Project dependencies
+
+
+
 ```
 
 ## Dependencies
