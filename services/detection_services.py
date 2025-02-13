@@ -9,6 +9,11 @@ class DetectionService:
         self.face_analyzer = FaceAnalyzer()
         self.object_detector = ObjectDetector()
 
+        # Initialize YOLO with CUDA support if available
+        self.net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
+        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
     def convert_to_serializable(self, obj):
         """Convert numpy types to Python native types"""
         if isinstance(obj, np.integer):
@@ -36,24 +41,14 @@ class DetectionService:
             # Make a copy for drawing
             output_image = image.copy()
 
-            # Detect and analyze faces
+            # Detect and analyze faces in parallel (using threading or multiprocessing)
             faces = self.face_analyzer.detect_faces(image)
             face_analyses = []
 
             for (x, y, w, h) in faces:
                 face_img = image[y:y+h, x:x+w]
-                
-                # Save temporary face image
-                temp_face_path = f"{image_path}_face_temp.jpg"
-                cv2.imwrite(temp_face_path, face_img)
-                
-                # Analyze face
-                analysis = self.face_analyzer.analyze_face(temp_face_path)
-                
-                # Clean up temporary face image
-                if os.path.exists(temp_face_path):
-                    os.remove(temp_face_path)
-                
+                analysis = self.face_analyzer.analyze_face(face_img)
+
                 if analysis:
                     face_analyses.append({
                         'location': {
